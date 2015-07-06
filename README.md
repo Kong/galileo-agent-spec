@@ -1,0 +1,1 @@
+# Mashape Analytics Agent Spec
