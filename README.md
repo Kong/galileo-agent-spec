@@ -101,11 +101,11 @@ These advanced configuration options are shared with other Mashape Analytics Sys
 - The Agent should only attempt to process the response object at the time the application is ready to send it
   - Just as with the request scenario, this is to ensure all possible headers and final modifications to the response objects are captured.
 
-## Body Size
+### Body Size
 
 - If the bodies *were* successfully captured, and in case the `Content-Length` header is not present, the Agent should attempt to calculate the request & response body size manually (in bytes)
 
-## Headers
+### Headers
 
 - When not readily available, the Agent should attempt to calculate headers sizes: *`ALF.har.log.entries[].request,headersSize`, `ALF.har.log.entries[].response.headersSize`* by reconstructing the [HTTP Message](http://httpwg.github.io/specs/rfc7230.html#http.message) from the start of the HTTP request/response message until (and including) the double CRLF before the body.
 
