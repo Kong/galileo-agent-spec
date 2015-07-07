@@ -2,6 +2,16 @@
 
 Agents are libraries that can act as a middleweare / helper utility in reading request & response objects at the start of the request before processing, and at the end of the response before sending, in order to construct [ALF objects](https://github.com/Mashape/api-log-format) which can be used with the [Mashape Analytics](https://www.apianalytics.com/) service.
 
+## TODO
+
+Missing from this spec:
+
+- [ ] logging to file when connection is down
+- [ ] memory management
+- [ ] data filtering
+- [ ] reading configuration from server
+- [ ] managing delivery failures
+
 ## Format
 
 The Agent will use [API Log Format](https://github.com/Mashape/api-log-format) *(ALF)* to create log entries.
