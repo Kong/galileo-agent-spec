@@ -47,7 +47,6 @@ The Agent will use [API Log Format](https://github.com/Mashape/api-log-format) *
 | `QUEUE_ALF`       | num of [ALF](https://github.com/Mashape/api-log-format) objects to queue before sending                 | *no*     | `10`    |
 | `QUEUE_ENTRIES`   | num of HAR Entries per [ALF](https://github.com/Mashape/api-log-format) object to queue before sending  | *no*     | `100`   |
 | `TIMEOUT`         | timeout *in seconds* before the Agent flushes the queues                                                | *no*     | `1`     |
-| `TIMEOUT`         | timeout *in seconds* before the Agent flushes the queues                                                | *no*     | `1`     |
 | `SSL`             | use SSL to encrypt connection to Socket Server                                                          | *no*     | `true`  |
 
 
