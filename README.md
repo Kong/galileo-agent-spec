@@ -109,7 +109,7 @@ These advanced configuration options are shared with other Mashape Analytics Sys
 
 - When not readily available, the Agent should attempt to calculate headers sizes: *`ALF.har.log.entries[].request,headersSize`, `ALF.har.log.entries[].response.headersSize`* by reconstructing the [HTTP Message](http://httpwg.github.io/specs/rfc7230.html#http.message) from the start of the HTTP request/response message until (and including) the double CRLF before the body.
 
-## Timings
+### Timings
 
 - The Agent should attempt to capture start time: *`ALF.har.log.entries[].startedDateTime`* and measure the wait time: *`ALF.har.log.entries[].time`*
   - The Agent is best suited to do this because of its position in the [Lifecycle](#Lifecycle)
