@@ -34,10 +34,10 @@ The Agent will use [API Log Format](https://github.com/Mashape/api-log-format) *
    └───────────────────────────────┘       └───────────────────────────┘
 ```
 
-## Configrations
+## Configurations
 
-- Environment configuration **must** be prefixed with: `MASHAPE_ANALYTICS_`
-- Libraries can **optionally** allow to override the environment configurations with local variables at initiation time
+- Environment variables **must** be prefixed with: `MASHAPE_ANALYTICS_AGENT`
+- Libraries can **optionally** allow to override the environment variables with local variables at initiation time
 
 | Name              | Description                                                                                             | Required | Default |
 | ----------------- | ------------------------------------------------------------------------------------------------------- | -------- | ------- |
@@ -46,17 +46,21 @@ The Agent will use [API Log Format](https://github.com/Mashape/api-log-format) *
 | `MAX_BODY_SIZE`   | limit captured *request & response* body sizes *(in bytes)*                                             | *no*     | `0`     |
 | `QUEUE_ALF`       | num of [ALF](https://github.com/Mashape/api-log-format) objects to queue before sending                 | *no*     | `10`    |
 | `QUEUE_ENTRIES`   | num of HAR Entries per [ALF](https://github.com/Mashape/api-log-format) object to queue before sending  | *no*     | `100`   |
+| `TIMEOUT`         | timeout *in seconds* before the Agent flushes the queues                                                | *no*     | `1`     |
+| `TIMEOUT`         | timeout *in seconds* before the Agent flushes the queues                                                | *no*     | `1`     |
+| `SSL`             | use SSL to encrypt connection to Socket Server                                                          | *no*     | `true`  |
 
 
-### Advanced Configuration
+### Shared Configuration
 
-These advanced configuration options are used for debugging and on-premise installations of Mashape Analytics.
+These advanced configuration options are shared with other Mashape Analytics Systems, and are used for on-premise installations of Mashape Analytics.
 
-| Name   | Description                                                | Required | Default                        |
-| ------ | ---------------------------------------------------------- | -------- | ------------------------------ |
-| `HOST` | hostname or IP address of Mashape Analytics Socket Server  | **yes**  | `socket.analytics.mashape.com` |
-| `PORT` | Socket Server communication port                           | **yes**  | `443`                          |
-| `SSL`  | encrypt connection with SSL                                | *no*     | `true`                         |
+- unlike standard configurations, these environment variables **must** be prefixed with: `MASHAPE_ANALYTICS_`
+
+| Name                 | Description                                                | Required | Default                        |
+| -------------------- | ---------------------------------------------------------- | -------- | ------------------------------ |
+| `SOCKET_SERVER_ADDR` | hostname or IP address of Mashape Analytics Socket Server  | **yes**  | `socket.analytics.mashape.com` |
+| `SOCKET_SERVER_PORT` | Socket Server communication port                           | **yes**  | `443`                          |
 
 ## Capturing Data
 
