@@ -6,11 +6,13 @@ Agents are libraries that can act as a middleweare / helper utility in reading r
 
 Missing from this spec:
 
+- [ ] HTTP / ZMQ
 - [ ] logging to file when connection is down
 - [ ] memory management
 - [ ] data filtering
 - [ ] reading configuration from server
 - [ ] managing delivery failures
+- [ ] Body size: always measure if possible
 
 ## Format
 
