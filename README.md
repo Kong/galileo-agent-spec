@@ -1,95 +1,42 @@
 # Mashape Analytics Agent Spec
 
-Agents are libraries that can act as a middleweare / helper utility in reading request & response objects at the start of the request before processing, and at the end of the response before sending, in order to construct [ALF objects](https://github.com/Mashape/api-log-format) which can be used with the [Mashape Analytics](https://www.apianalytics.com/) service.
+Agents are libraries that can act as a middleweare / helper utility in reading request & response objects at the start of the request before processing, and at the end of the response before sending, in order to construct [ALF objects](https://github.com/Mashape/api-log-format) which can be used with the [Galileo](https://www.apianalytics.com/) service.
 
-## TODO
+## Connectivity
 
-Missing from this spec:
+There are 2 ways to communicate with the Galileo infrastructure: ZMQ and HTTP.
 
-- [ ] HTTP / ZMQ
-- [ ] logging to file when connection is down
-- [ ] memory management
-- [ ] data filtering
-- [ ] reading configuration from server
-- [ ] managing delivery failures
-- [ ] Body size: always measure if possible
+If the agent can be installed WITHOUT having to install another system-wide library for ZMQ, then use ZMQ. Otherwise use HTTP. For example, Java offers a complete implementation of ZMQ in pure Java, which means that it'll be installed automatically by maven and it doesn't need any `sudo apt-get install`.
+
+### ZMQ
+
+The agent MUST:
+
+- Connect to `tcp://socket.analytics.mashape.com:5500` in PUSH mode
+- Send ALFs automatically on the socket as they arrive
+- Listen to the flush event. If an ALF cannot be flushed within 20 seconds, the socket must be destroyed and a new one created. Don't lose any ALFs in the process.
+
+### HTTP
+
+In the ALF format, there's 2 ways to batch data. The first is to create an array of ALF objects `[{ALF}, {ALF}]`. The second is to make one ALF have multiple entries. Option 2 means that they'll share the ALF header, so it's only acceptable if they share the same `serviceToken` and `environment`, for example.
+
+The agent MUST:
+
+- Bulk the data, see above for the 2 ways to do it
+- If the ALFs are batched into an array (Option 1), flush the array to `http://socket.analytics.mashape.com/1.0.0/batch` **every 2 seconds AND every time the array length reaches 1000`. Those settings should be adjustable by the user.
+- If Option 2 is chosen, it means there's only one ALF to send (even though it might have more than one entry). Send it to `http://socket.analytics.mashape.com/1.0.0/single`.
+- Monitor the response of the server. If it isn't `200 OK`, then save it to the disk and save the error somewhere (stderr or the error logs, for example).
+
 
 ## Format
 
 The Agent will use [API Log Format](https://github.com/Mashape/api-log-format) *(ALF)* to create log entries.
 
-## Lifecycle
-
-```
-   ┌───────────────────────────────┐
-   │ [client] new request          │──┐
-   └───────────────────────────────┘  │
-┌─────────────────────────────────────┘
-│  ┌───────────────────────────────┐
-└─▶│ [agent] process request       │──┐
-   └───────────────────────────────┘  │
-┌─────────────────────────────────────┘
-│  ┌───────────────────────────────┐
-└─▶│ [application] process request │──┐
-   └───────────────────────────────┘  │
-┌─────────────────────────────────────┘
-│  ┌───────────────────────────────┐
-└─▶│ [application] create response │──┐
-   └───────────────────────────────┘  │
-┌─────────────────────────────────────┘
-│  ┌───────────────────────────────┐       ┌───────────────────────────┐
-└─▶│ [agent] process response      │──┬───▶│ [agent] queue log entries │──┐
-   └───────────────────────────────┘  │    └───────────────────────────┘  │
-┌─────────────────────────────────────┘ ┌─────────────────────────────────┘
-│  ┌───────────────────────────────┐    │  ┌───────────────────────────┐
-└─▶│ [application] send response   │    └─▶│ [agent] send log entries  │
-   └───────────────────────────────┘       └───────────────────────────┘
-```
-
-## Configurations
-
-- Environment variables **must** be prefixed with: `MASHAPE_ANALYTICS_AGENT`
-- Libraries can **optionally** allow to override the environment variables with local variables at initiation time
-
-| Name              | Description                                                                                             | Required | Default |
-| ----------------- | ------------------------------------------------------------------------------------------------------- | -------- | ------- |
-| `SERVICE_TOKEN`   | [Mashape Analytics](https://www.apianalytics.com/) Service Token                                        | **yes**  | `-`     |
-| `ENVIRONMENT`     | [Mashape Analytics](https://www.apianalytics.com/) Environment Name                                     | *no*     | `-`     |
-| `MAX_BODY_SIZE`   | limit captured *request & response* body sizes *(in bytes)*                                             | *no*     | `0`     |
-| `QUEUE_ALF`       | num of [ALF](https://github.com/Mashape/api-log-format) objects to queue before sending                 | *no*     | `10`    |
-| `QUEUE_ENTRIES`   | num of HAR Entries per [ALF](https://github.com/Mashape/api-log-format) object to queue before sending  | *no*     | `100`   |
-| `TIMEOUT`         | timeout *in seconds* before the Agent flushes the queues                                                | *no*     | `1`     |
-| `SSL`             | use SSL to encrypt connection to Socket Server                                                          | *no*     | `true`  |
-
-
-### Shared Configuration
-
-These advanced configuration options are shared with other Mashape Analytics Systems, and are used for on-premise installations of Mashape Analytics.
-
-- unlike standard configurations, these environment variables **must** be prefixed with: `MASHAPE_ANALYTICS_`
-
-| Name                 | Description                                                | Required | Default                        |
-| -------------------- | ---------------------------------------------------------- | -------- | ------------------------------ |
-| `SOCKET_SERVER_ADDR` | hostname or IP address of Mashape Analytics Socket Server  | **yes**  | `socket.analytics.mashape.com` |
-| `SOCKET_SERVER_PORT` | Socket Server communication port                           | **yes**  | `443`                          |
-
-## Capturing Data
+Most of the fields in ALF are self-explanatory. Check out the [HAR spec](http://www.softwareishard.com/blog/har-12-spec/) for additional information. The most common gotchas and questions are answered here:
 
 ### clientIPAddress
 
-- The Agent should not Trust the client IP address provided from the application framework
-- The Agent should parse all appropriate header schemas in order to find the client IP address
-- Depending on the implementation language, some helper libraries or packages might exist to facilitate this, those should be tested to ensure they cover all the schemas below
-- The default fallback should always be the IP address assigned by the network interface
-
-#### Known Proxy IP Header Schemas
-
-- [`RFC7239`](http://tools.ietf.org/html/rfc7239): The **ONLY** official standard.
-- [`CF-Connecting-IP`](https://support.cloudflare.com/hc/en-us/articles/200170986-How-does-CloudFlare-handle-HTTP-Request-headers-): for applications behind Cloudflare's cloud proxies
-- [`Fastly-Client-IP`](https://docs.fastly.com/guides/tls/how-can-i-find-the-original-ip-when-using-tls-termination): for applications using Fastly caching proxies
-- `X-Cluster-Client-IP`: RiverBed Stingray (used by Rackspace)
-- `X-Real-IP`: a common, nonstandard header, often used with Nginx.
-- `X-Forwarded-For`: most common, nonstandard header, typically referred to as `XFF`
+Use, in order of priority: `Forwarded` header (RFC7239), `X-Real-IP` header, `X-Forwarded-For` header, raw socket IP.
 
 ### Request
 
@@ -105,23 +52,24 @@ These advanced configuration options are shared with other Mashape Analytics Sys
 
 ### Body Size
 
-- If the bodies *were* successfully captured, and in case the `Content-Length` header is not present, the Agent should attempt to calculate the request & response body size manually (in bytes)
+- If the bodies *were* successfully captured, the Agent should attempt to calculate the request & response body size manually (in bytes). Otherwise, rely on the Content-Length header (this will fail for Chunked connections, for those the body needs to be counted manually).
 
 ### Headers
 
-- When not readily available, the Agent should attempt to calculate headers sizes: *`ALF.har.log.entries[].request,headersSize`, `ALF.har.log.entries[].response.headersSize`* by reconstructing the [HTTP Message](http://httpwg.github.io/specs/rfc7230.html#http.message) from the start of the HTTP request/response message until (and including) the double CRLF before the body.
+- When not readily available, the Agent should attempt to calculate headers sizes: *`ALF.har.log.entries[].request,headersSize`, `ALF.har.log.entries[].response.headersSize`* by reconstructing the [HTTP Message](http://httpwg.github.io/specs/rfc7230.html#http.message) from the start of the HTTP request/response message until (and including) the double CRLF before the body. This means calculating the length of the headers as they appeared "on the wire", including the colon, space and CRLF between headers.
 
 ### Timings
 
-- The Agent should attempt to capture start time: *`ALF.har.log.entries[].startedDateTime`* and measure the wait time: *`ALF.har.log.entries[].time`*
-  - The Agent is best suited to do this because of its position in the [Lifecycle](#Lifecycle)
+There are 3 mandatory fields:
 
-## Debugging
+- send: How long did it take between the request was received and the time it was forwarded to the service that can process it?
+- wait: How long did it take between the time the request was forwarded to the service and the time the service STARTED sending back a response?
+- receive: How long did it take between the time the service STARTED sending the response and the time the body was fully flushed?
 
-Agents should conditionally write to `stderr` based on the existence of the **agent name** in the environment variable: `MASHAPE_DEBUG`.
+### Bodies
 
-###### Example
+When the request/response bodies are captured, they must be base64-encoded.
 
-```
-MASHAPE_DEBUG=analytics-agent-node,analytics-server
-```
+For request bodies: `request.postData = {"text":BASE64_BODY}`
+
+For response bodies: `response.content = {"encoding":"base64", "text":BASE64_BODY}`
