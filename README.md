@@ -10,6 +10,15 @@ If the agent can be installed WITHOUT having to install another system-wide libr
 
 ### ZMQ
 
+```js
+var zmq = require('zmq');
+var socket = zmq.socket('push');
+socket.connect('tcp://socket.analytics.mashape.com:5500');
+
+// The space between the type and the payload is mandatory
+socket.send('alf_1.0.0 ' + JSON.stringify(alfObject));
+```
+
 The agent MUST:
 
 - Connect to `tcp://socket.analytics.mashape.com:5500` in PUSH mode
