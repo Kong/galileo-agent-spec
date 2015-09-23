@@ -32,8 +32,8 @@ In the ALF format, there's 2 ways to batch data. The first is to create an array
 The agent MUST:
 
 - Bulk the data, see above for the 2 ways to do it
-- If the ALFs are batched into an array (Option 1), flush the array to `http://socket.analytics.mashape.com/1.0.0/batch` **every 2 seconds AND every time the array length reaches 1000`. Those settings should be adjustable by the user.
-- If Option 2 is chosen, it means there's only one ALF to send (even though it might have more than one entry). Send it to `http://socket.analytics.mashape.com/1.0.0/single`.
+- If the ALFs are batched into an array (Option 1), flush the array to `http://socket.analytics.mashape.com/1.0.0/batch` **every 2 seconds AND every time the array length reaches 1000 AND every time the total payload reaches 5Mb`. The flush interval (2 seconds) and the queue length (1000) should be configurable by the user.
+- If Option 2 is chosen, it means there's only one ALF to send (even though it might have more than one entry). Send it to `http://socket.analytics.mashape.com/1.0.0/single`. Make sure it doesn't exceed 5Mb.
 - Monitor the response of the server. If it isn't `200 OK`, then save it to the disk and save the error somewhere (stderr or the error logs, for example).
 
 
