@@ -23,8 +23,9 @@ The agent MUST:
 
 - Connect to `tcp://socket.analytics.mashape.com:5500` in PUSH mode
 - Send ALFs automatically on the socket as they arrive
-- Listen to the flush event. If an ALF cannot be flushed within 5 seconds, then the ALF is put in a array/list called 'buffer'. Every ALF needs its own individual timeout.
+- Listen to the flush event. If an ALF cannot be flushed within 5 seconds, then the ALF is put in a array/list called 'buffer'. Every ALF needs its own individual timeout 5-second timeout.
 - Set a background timer/interval that executes a function every 5 seconds. That function checks the buffer length. If it's greater than 0, the ZMQ socket is destroyed and replaced with a new one. Then the buffer is emptied into the new socket. Don't forget that every ALF still needs its own 5-second timeout to check if it has been flushed successfully.
+- Every 5 minutes, replace the socket with a fresh one (to give the ELB a chance to distribute load around).
 
 ### HTTP
 
