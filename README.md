@@ -23,7 +23,8 @@ The agent MUST:
 
 - Connect to `tcp://socket.analytics.mashape.com:5500` in PUSH mode
 - Send ALFs automatically on the socket as they arrive
-- Listen to the flush event. If an ALF cannot be flushed within 20 seconds, the socket must be destroyed and a new one created. Don't lose any ALFs in the process.
+- Listen to the flush event. If an ALF cannot be flushed within 5 seconds, then the ALF is put in a array/list called 'buffer'. Every ALF needs its own individual timeout.
+- Set a background timer/interval that executes a function every 5 seconds. That function checks the buffer length. If it's greater than 0, the ZMQ socket is destroyed and replaced with a new one. Then the buffer is emptied into the new socket. Don't forget that every ALF still needs its own 5-second timeout to check if it has been flushed successfully.
 
 ### HTTP
 
@@ -32,8 +33,8 @@ In the ALF format, there's 2 ways to batch data. The first is to create an array
 The agent MUST:
 
 - Bulk the data, see above for the 2 ways to do it
-- If the ALFs are batched into an array (Option 1), flush the array to `http://socket.analytics.mashape.com/1.0.0/batch` **every 2 seconds AND every time the array length reaches 1000 AND every time the total payload reaches 5Mb`. The flush interval (2 seconds) and the queue length (1000) should be configurable by the user.
-- If Option 2 is chosen, it means there's only one ALF to send (even though it might have more than one entry). Send it to `http://socket.analytics.mashape.com/1.0.0/single`. Make sure it doesn't exceed 5Mb.
+- If the ALFs are batched into an array (Option 1), flush the array to `http://socket.analytics.mashape.com/1.0.0/batch` **every 2 seconds AND ALSO every time the array length reaches 1000 elements`. The flush interval (2 seconds) and the queue length (1000) should be configurable by the user.
+- If Option 2 is chosen, it means there's only one ALF to send (even though it might have more than one entry). Send it to `http://socket.analytics.mashape.com/1.0.0/single`.
 - Monitor the response of the server. If it isn't `200 OK`, then save it to the disk and save the error somewhere (stderr or the error logs, for example).
 
 
