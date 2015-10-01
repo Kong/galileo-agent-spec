@@ -1,4 +1,4 @@
-# Mashape Analytics Agent Spec
+# Galileo Analytics Agent Spec
 
 Agents are libraries that can act as a middleweare / helper utility in reading request & response objects at the start of the request before processing, and at the end of the response before sending, in order to construct [ALF objects](https://github.com/Mashape/api-log-format) which can be used with the [Galileo](https://www.apianalytics.com/) service.
 
