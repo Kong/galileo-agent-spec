@@ -128,7 +128,7 @@ The following rules are beyond the scope of HAR and **MUST** be applied to all a
 
 - [ ] Parse Headers to obtain true client IP *(see [reference table](#client-ip-headers) below)*
 - [ ] fallback to capturing the raw socket client IP
-- 
+
 ###### Client IP Headers
 
 | header                | priority | description                                                            |
