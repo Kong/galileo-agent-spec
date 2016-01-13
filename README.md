@@ -140,6 +140,8 @@ The following rules are beyond the scope of HAR and **MUST** be applied to all a
 | `CF-Connecting-IP`    | 4        | [CloudFlare](http://bit.ly/22ZZ53c)                                    |
 | `X-Cluster-Client-IP` | 4        | [Rackspace](http://bit.ly/1KdMKNc), X-Ray                              |
 | `Z-Forwarded-For`     | 5        | Z Scaler                                                               |
+| `WL-Proxy-Client-IP`  | 5        | Oracle Web Logic                                                       |
+| `Proxy-Client-IP`     | 5        | no-references                                                          |
 
 ### Request
 
