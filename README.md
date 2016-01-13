@@ -126,9 +126,20 @@ The following rules are beyond the scope of HAR and **MUST** be applied to all a
 
 ### `clientIPAddress`
 
-- [ ] Parse Headers to obtain true client IP
-  - in order of priority: `Forwarded` *([RFC 7239](https://tools.ietf.org/html/rfc7239))*, `X-Real-IP`, `X-Forwarded-For`
+- [ ] Parse Headers to obtain true client IP *(see [reference table](#client-ip-headers) below)*
 - [ ] fallback to capturing the raw socket client IP
+- 
+###### Client IP Headers
+
+| header                | priority | description                                                            |
+| --------------------- | -------- | ---------------------------------------------------------------------- |
+| `Forwarded`           | 1        | [RFC 7239](https://tools.ietf.org/html/rfc7239) Standard               |
+| `X-Real-IP`           | 2        | mostly used in [proxies](http://bit.ly/1Jj9yu6)                        |
+| `X-Forwarded-For`     | 3        | common, [non-standard](https://en.wikipedia.org/wiki/X-Forwarded-For)  |
+| `Fastly-Client-IP`    | 4        | [Fastly](http://bit.ly/1Rm8pdA)                                        |
+| `CF-Connecting-IP`    | 4        | [CloudFlare](http://bit.ly/22ZZ53c)                                    |
+| `X-Cluster-Client-IP` | 4        | [Rackspace](http://bit.ly/1KdMKNc), X-Ray                              |
+| `Z-Forwarded-For`     | 5        | Z Scaler                                                               |
 
 ### Request
 
