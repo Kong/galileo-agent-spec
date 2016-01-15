@@ -116,6 +116,11 @@ The agent MUST:
 - If Option 2 is chosen, it means there's only one ALF to send (even though it might have more than one entry). Send it to `http://socket.analytics.mashape.com/1.0.0/single`.  Make sure it doesn't exceed 500 MB.
 - Monitor the response of the server. If it isn't `200 OK`, then save it to the disk and save the error somewhere (stderr or the error logs, for example).
 
+#### Response
+- Successful, 200 would be retured with body (Valid ALFs: Saved ALFs/total ALFs) for request containing all valid ALFs and if request not breaching rate limit
+- Partial Sucess, 207 would be retured with body (Valid ALFs: Saved ALFs/total ALFs) for request containing partial valid ALFs or if request breaching rate limit
+- Failure, 400, if request size is more than 500 mb or if you enter a type that doesn’t exist ( `'alf_1.0.0', 'batch_alf_1.0.0'`) 
+
 ## Capturing Data
 
 The Agent will use [API Log Format](https://github.com/Mashape/api-log-format) *(ALF)* to create log entries.
