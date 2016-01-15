@@ -118,8 +118,8 @@ The agent MUST:
 
 #### Response
 - Successful, 200 would be retured with body (Valid ALFs: Saved ALFs/total ALFs) for request containing all valid ALFs and if request not breaching rate limit
-- Partial Sucess, 207 would be retured with body (Valid ALFs: Saved ALFs/total ALFs) for request containing partial valid ALFs or if request breaching rate limit
-- Failure, 400, if request size is more than 500 mb or if you enter a type that doesn’t exist ( `'alf_1.0.0', 'batch_alf_1.0.0'`) 
+- Partial success, 207 would be retured with body (Valid ALFs: Saved ALFs/total ALFs) for request containing partial valid ALFs or if request breaching rate limit
+- Failure, 400 would be retured, if request size is more than 500 mb or if you enter a type that doesn’t exist ( `'alf_1.0.0', 'batch_alf_1.0.0'`) 
 
 ## Capturing Data
 
