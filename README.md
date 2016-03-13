@@ -32,94 +32,56 @@ Agents need to appropriately be injected at the appropriate point in the request
    └──────────────────────────────────────┘                                         └────────────────────────────┘
 ```
 
-## Connectivity
-
-There are 2 ways to communicate with the Galileo infrastructure: [ZMQ](http://zeromq.org/) and HTTP.
-
-If the programming language provides access to native bindings for ZMQ, and the agent can declare a direct dependency for ZMQ lib (through package managers), then ZMQ is preferred. Otherwise use HTTP.
-
-###### Examples
-
-- :+1: Java: [jeromq](https://github.com/zeromq/jeromq)
-- :+1: Python: [pyzmq](https://github.com/zeromq/pyzmq)
-- :-1: Node.js: [zeromq.node](https://github.com/JustinTulloss/zeromq.node)
-
 ## Agent Configuration
 
 The Agent should expose the following optional configurations to the user, with fallback to default values when none are provided:
 
-| name                      | type     | description                                                                  | default                      |
-| ------------------------- | -------- | ---------------------------------------------------------------------------- | ---------------------------- |
-| **`HOST`**                | [`RFC 3986 Host`][rfc3986-host] | DNS Host / IP Address of Galileo Socket Service       | `socket.galileo.mashape.com` |
-| **`PORT`**                | [`RFC 3986 Port`][rfc3986-port] | Port for Galileo Socket Service                       | `5500`                       |
-| **`FAIL_LOG`**            | [`RFC 3986 Path`][rfc3986-path] | file system path, storage location for failed message | `/dev/null`                  |
-| **`RETRY_COUNT`**         | `integer`                       | Number of retries in case of failures                 | `0`                          |
+| name              | type                            | description                                           | default                      |
+| ----------------- | ------------------------------- | ----------------------------------------------------- | ---------------------------- |
+| **`HOST`**        | [`RFC 3986 Host`][rfc3986-host] | DNS Host / IP Address of Galileo Socket Service       | `socket.galileo.mashape.com` |
+| **`PORT`**        | [`RFC 3986 Port`][rfc3986-port] | Port for Galileo Socket Service                       | `5500`                       |
+| **`FAIL_LOG`**    | [`RFC 3986 Path`][rfc3986-path] | file system path, storage location for failed message | `/dev/null`                  |
+| **`RETRY_COUNT`** | `integer`                       | Number of retries in case of failures                 | `0`                          |
 
-### ZMQ
-
-#### Options
-
-In addition to the [Agent Configuration](#agent-configuration), the Agent should also expose the following optional configurations to ZMQ users, with fallback to default values when none are provided:
-
-| name                      | description                                                                   | default                      |
-| ------------------------- | ----------------------------------------------------------------------------- | ---------------------------- |
-| **`CONNECTION_TIMEOUT`**  | Timeout in minutes before recycling the connection to Galileo Socket Service  | `5`                          |
-| **`FLUSH_TIMEOUT`**       | Timeout in seconds before abort sending current message                       | `5`                          |
-
-#### Message Format
-
-```
-alf_1.0.0 {ALF_OBJECT}
-```
-
-where `{ALF_OBJECT}` is a `UTF-8` encoded String of the [ALF JSON Object][api-log-format]
-
-#### Behavior
-
-The agent MUST:
-
-- [ ] Connect to `tcp://HOST:PORT` in `PUSH` mode
-- [ ] Send ALFs automatically on the socket as they arrive
-- [ ] On an Interval of `CONNECTION_TIMEOUT`, replace the socket with a fresh one.
-- [ ] Manage timeouts / failures:
-  - message cannot be flushed within `FLUSH_TIMEOUT`
-  - message rejected from Galileo Socket Server
-  - retry as per `RETRY_COUNT` or send to `FAIL_LOG`.
-
-### HTTP
+### Connectivity
 
 #### Options
 
 In addition to the [Agent Configuration](#agent-configuration), the Agent should also expose the following optional configurations to ZMQ users, with fallback to default values when none are provided:
 
-| name                      | unit    | description                                         | default                      |
-| ------------------------- | ------- | --------------------------------------------------- | ---------------------------- |
-| **`CONNECTION_TIMEOUT`**  | seconds | timeout before aborting the current HTTP connection | `30`                         |
-| **`FLUSH_TIMEOUT`**       | seconds | timeout before flushing the current queue           | `5`                          |
-| **`QUEUE_SIZE`**          | integer | total queue size                                    | `100`                        |
+| name                      | unit    | description                                         | default |
+| ------------------------- | ------- | --------------------------------------------------- | ------- |
+| **`CONNECTION_TIMEOUT`**  | seconds | timeout before aborting the current HTTP connection | `30`    |
+| **`FLUSH_TIMEOUT`**       | seconds | timeout before flushing the current queue           | `5`     |
+| **`QUEUE_SIZE`**          | integer | total queue size                                    | `100`   |
 
 The Galileo Socket Service provides two methods to batch data.
 
 1. Group multiple ALF Objects into an array: `[{ALF_OBJECT}, {ALF_OBJECT}]`.
-2. Construct a single ALF Object with multiple [HAR][har-spec] [entries](http://www.softwareishard.com/blog/har-12-spec/#entries).
+2. Construct a single ALF Object with multiple entries
 
 ###### Note:
 
-The latter batching method requires sharing the same ALF log entry, meaning all entries share the same ALF [root properties](https://github.com/Mashape/api-log-format/blob/master/versions/1.0.0.md#properties) *(e.g. `version`, `clientIPAddress`)*. This introduces an implicit requirement to group by `clientIPAddress`, and therefore is a complex scenario that is best avoided.
+The latter batching method requires sharing the same ALF log entry, meaning all entries share the same ALF [root properties][api-log-format] *(e.g. `version`, `clientIPAddress`)*. This introduces an implicit requirement to group by `clientIPAddress`, and therefore is a complex scenario that is best avoided.
 
 #### Behavior
 
 The agent MUST:
 
 - [ ] Group the data into before sending as batches
-- If the ALFs are batched into an array (Option 1), flush the array to `http://socket.analytics.mashape.com/1.0.0/batch` **every 2 seconds AND ALSO every time the array length reaches 1000 elements**. The flush interval (2 seconds) and the queue length (1000) should be configurable by the user.
-- If Option 2 is chosen, it means there's only one ALF to send (even though it might have more than one entry). Send it to `http://socket.analytics.mashape.com/1.0.0/single`.  Make sure it doesn't exceed 500 MB.
+- [ ] On an Interval of `CONNECTION_TIMEOUT` and without a response from the server, terminate the request.
+- [ ] Manage timeouts / failures:
+  - message cannot be flushed within `FLUSH_TIMEOUT`
+  - message rejected from Galileo Socket Server
+  - retry as per `RETRY_COUNT` or send to `FAIL_LOG`.
+- If the ALFs are batched into an array (Option 1), flush the array to `http://socket.galileo.mashape.com/1.0.0/batch` **every 2 seconds AND ALSO every time the array length reaches 1000 elements**. The flush interval (2 seconds) and the queue length (1000) should be configurable by the user.
+- If Option 2 is chosen, it means there's only one ALF to send (even though it might have more than one entry). Send it to `http://socket.galileo.mashape.com/1.0.0/single`.  Make sure it doesn't exceed 500 MB.
 - Monitor the response of the server. If it isn't `200 OK`, then save it to the disk and save the error somewhere (stderr or the error logs, for example).
 
 #### Response
 - Successful, 200 would be retured with body (Valid ALFs: Saved ALFs/total ALFs) for request containing all valid ALFs and if request not breaching rate limit
 - Partial success, 207 would be retured with body (Valid ALFs: Saved ALFs/total ALFs) for request containing partial valid ALFs or if request breaching rate limit
-- Failure, 400 would be retured, if request size is more than 500 mb or if you enter a type that doesn’t exist ( `'alf_1.0.0', 'batch_alf_1.0.0'`) 
+- Failure, 400 would be retured, if request size is more than 500 mb or if you enter a type that doesn’t exist ( `'alf_1.0.0', 'batch_alf_1.0.0'`)
 
 ## Capturing Data
 
@@ -172,7 +134,7 @@ The following rules are beyond the scope of HAR and **MUST** be applied to all a
 ### Headers
 
 - [ ] When not readily available, the Agent should attempt to calculate headers sizes: *`ALF.har.log.entries[].request.headersSize`, `ALF.har.log.entries[].response.headersSize`*
-  - this can be achieved by reconstructing the [HTTP Message](http://httpwg.github.io/specs/rfc7230.html#http.message) from the start of the HTTP request/response message until (and including) the double `CRLF` before the body.
+  - this can be achieved by reconstructing the [HTTP Message][rfc7230-message] from the start of the HTTP request/response message until (and including) the double `CRLF` before the body.
   - This means calculating the length of the headers as they appeared "on the wire", including the colon, space and `CRLF` between headers.
 
 ### Timings
@@ -195,12 +157,23 @@ The term *"processing time"* can refers to different meanings given the agent ty
 When the request/response bodies are captured, they must be base64-encoded:
 
 ###### Example
-For request bodies: `request.postData = {"encoding": "base64", "text": "BASE64_BODY"}`
-For response bodies: `response.content = {"encoding": "base64", "text": "BASE64_BODY" }`
+
+For request bodies:
+
+```js
+request.postData = { encoding: 'base64', text: 'BASE64_BODY' }
+```
+
+For response bodies:
+
+```js
+response.content = { encoding: 'base64', text: 'BASE64_BODY' }
+```
 
 [api-log-format]: https://github.com/Mashape/api-log-format
 [galileo]: https://getgalileo.io/
 [har-spec]: http://www.softwareishard.com/blog/har-12-spec/
 [rfc3986-host]: https://tools.ietf.org/html/rfc3986#section-3.2.2
-[rfc3986-port]: https://tools.ietf.org/html/rfc3986#section-3.2.3
 [rfc3986-path]: https://tools.ietf.org/html/rfc3986#section-3.3
+[rfc3986-port]: https://tools.ietf.org/html/rfc3986#section-3.2.3
+[rfc7230-message]: http://httpwg.github.io/specs/rfc7230.html#http.message
