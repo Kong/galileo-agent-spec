@@ -1,40 +1,41 @@
-# Galileo Analytics Agent Spec
-
 Agents are libraries that can act as a middleweare / helper utility in reading incoming requests & outgoing responses data in order to construct [ALF objects][api-log-format] which can be used with the [Galileo][galileo] service.
 
 ## Lifecycle
 
 Agents need to appropriately be injected at the appropriate point in the request-response lifecycle, at the start of the request before processing any business logic, and at the end of the response before sending back to the client.
 
-![agent lifecycle](agent-lifecycle.png)
+![](https://raw.githubusercontent.com/Mashape/galileo-agent-spec/master/agent-lifecycle.png)
 
 ## Agent Configuration
 
+### Required settings
+
+All agents need to request the following information to properly function:
+
+| name                | type                            | description                                             |
+| ------------------- | ------------------------------- | ------------------------------------------------------- |
+| **`SERVICE_TOKEN`** | `string`                        | Galileo Service Token                                   |
+| **`ENVIRONMENT`**   | `string`                        | The environemnt slug for the target Galileo environment |
+
+### Optional settings
+
 The Agent should expose the following optional configurations to the user, with fallback to default values when none are provided:
 
-| name              | type                            | description                                           | default                      |
-| ----------------- | ------------------------------- | ----------------------------------------------------- | ---------------------------- |
-| **`HOST`**        | [`RFC 3986 Host`][rfc3986-host] | DNS Host / IP Address of Galileo Socket Service       | `socket.galileo.mashape.com` |
-| **`PORT`**        | [`RFC 3986 Port`][rfc3986-port] | Port for Galileo Socket Service                       | `5500`                       |
-| **`FAIL_LOG`**    | [`RFC 3986 Path`][rfc3986-path] | file system path, storage location for failed message | `/dev/null`                  |
-| **`RETRY_COUNT`** | `integer`                       | Number of retries in case of failures                 | `0`                          |
-
-### Connectivity
-
-#### Options
-
-In addition to the [Agent Configuration](#agent-configuration), the Agent should also expose the following optional configurations to ZMQ users, with fallback to default values when none are provided:
-
-| name                      | unit    | description                                         | default |
-| ------------------------- | ------- | --------------------------------------------------- | ------- |
+| name                | type                            | description                                             | default                      |
+| ------------------- | ------------------------------- | ------------------------------------------------------- | ---------------------------- |
+| **`HOST`**          | [`RFC 3986 Host`][rfc3986-host] | DNS Host / IP Address of Galileo Collector Service         | `collector.galileo.mashape.com` |
+| **`PORT`**          | [`RFC 3986 Port`][rfc3986-port] | Port for Galileo Socket Service                         | `443`                       |
+| **`FAIL_LOG`**      | [`RFC 3986 Path`][rfc3986-path] | file system path, storage location for failed message   | `/dev/null`                  |
+| **`RETRY_COUNT`**   | `integer`                       | Number of retries in case of failures                   | `0`                          |
+| **`LOG_BODY`**      | `boolean`                       | Whether to send the full request body to Galileo        | `false`                      |
 | **`CONNECTION_TIMEOUT`**  | seconds | timeout before aborting the current HTTP connection | `30`    |
 | **`FLUSH_TIMEOUT`**       | seconds | timeout before flushing the current queue           | `5`     |
 | **`QUEUE_SIZE`**          | integer | total queue size                                    | `100`   |
 
-The Galileo Socket Service provides two methods to batch data.
+The Galileo Collector Service provides two methods to batch data.
 
-1. Group multiple ALF Objects into an array: `[{ALF_OBJECT}, {ALF_OBJECT}]`.
-2. Construct a single ALF Object with multiple entries
+1. Group multiple ALF Objects into an array: `[{ALF_OBJECT}, {ALF_OBJECT}]`. These go to the `/batch` endpoint on the collector
+2. Construct a single ALF Object with multiple entries. These go to the `/single` endpoint on the collector.
 
 ###### Note:
 
@@ -44,9 +45,9 @@ The latter batching method requires sharing the same ALF log entry, meaning all 
 
 The agent MUST:
 
-- [ ] Group the data into before sending as batches
-- [ ] On an Interval of `CONNECTION_TIMEOUT` and without a response from the server, terminate the request.
-- [ ] Manage timeouts / failures:
+- Group the data into before sending as batches
+- On an Interval of `CONNECTION_TIMEOUT` and without a response from the server, terminate the request.
+- Manage timeouts / failures:
   - message cannot be flushed within `FLUSH_TIMEOUT`
   - message rejected from Galileo Socket Server
   - retry as per `RETRY_COUNT` or send to `FAIL_LOG`.
@@ -63,12 +64,14 @@ The agent MUST:
 
 The Agent will use [API Log Format](https://github.com/Mashape/api-log-format) *(ALF)* to create log entries.
 
+Most of the fields in ALF are self-explanatory. Check out the [HAR spec][har-spec] for additional information.
+
 The following rules are beyond the scope of HAR and **MUST** be applied to all agents:
 
 ### `clientIPAddress`
 
-- [ ] Parse Headers to obtain true client IP *(see [reference table](#client-ip-headers) below)*
-- [ ] fallback to capturing the raw socket client IP
+- Parse Headers to obtain true client IP *(see [reference table](#client-ip-headers) below)*
+- fallback to capturing the raw socket client IP
 
 ###### Client IP Headers
 
@@ -86,11 +89,11 @@ The following rules are beyond the scope of HAR and **MUST** be applied to all a
 
 ### Request
 
-- [ ] Agents should attempt to get the **RAW** Request as early as possible *(as soon as the last byte is received and before application business logic)*
+- Agents should attempt to get the **RAW** Request as early as possible *(as soon as the last byte is received and before application business logic)*
   - Should be triggered prior to any processing *(decompression, modification, normalization, etc...)* by the application or application framework.
   - In many languages *(especially: `PHP`, `Node.js`)* reading the input stream is awarded to the **first listener**, the stream is then flushed, thus blocking any following listeners from reading
   - This is to ensure all original headers and body state are captured properly.
-- [ ] Agents cannot obstruct the application natural flow.
+- Agents cannot obstruct the application natural flow.
   - should not prevent the application from getting the request data for its own processing
   - this is likely framework dependent, or in the case of `PHP`, `Node.js`, the input stream can only be read once, and thus the agent must re-institute the stream so the application logic can continue un-interrupted.
 
@@ -102,12 +105,12 @@ The following rules are beyond the scope of HAR and **MUST** be applied to all a
 
 ### Body Size
 
-- [ ] Agent should attempt to calculate the request & response body size manually *(in bytes)* or Otherwise, rely on the `Content-Length` header when available.
+- Agent should attempt to calculate the request & response body size manually *(in bytes)* or Otherwise, rely on the `Content-Length` header when available.
   - this is true regardless whether bodies are flagged to be sent or not.
 
 ### Headers
 
-- [ ] When not readily available, the Agent should attempt to calculate headers sizes: *`ALF.har.log.entries[].request.headersSize`, `ALF.har.log.entries[].response.headersSize`*
+- When not readily available, the Agent should attempt to calculate headers sizes: *`ALF.har.log.entries[].request.headersSize`, `ALF.har.log.entries[].response.headersSize`*
   - This can be achieved by reconstructing the [HTTP Message][rfc7230-message] from the start of the HTTP request/response message until (and including) the double `CRLF` before the body.
   - This means calculating the length of the headers as they appeared "on the wire", including the colon, space and `CRLF` between headers.
 
@@ -115,9 +118,9 @@ The following rules are beyond the scope of HAR and **MUST** be applied to all a
 
 There are 3 mandatory fields that require to be manually calculated (where applicable):
 
-- [ ] `ALF.har.log.entries[].timings.send`: duration in milliseconds, between the first byte of request received and *processing time*
-- [ ] `ALF.har.log.entries[].timings.wait`: duration in milliseconds, between the *processing time* and the first byte of response sent time
-- [ ] `ALF.har.log.entries[].timings.receive`: duration in milliseconds, between the first byte of the response time and the last byte sent time
+- `ALF.har.log.entries[].timings.send`: duration in milliseconds, between the first byte of request received and *processing time*
+- `ALF.har.log.entries[].timings.wait`: duration in milliseconds, between the *processing time* and the first byte of response sent time
+- `ALF.har.log.entries[].timings.receive`: duration in milliseconds, between the first byte of the response time and the last byte sent time
 
 ###### Note:
 
@@ -146,6 +149,7 @@ response.content = { encoding: 'base64', text: 'BASE64_BODY' }
 
 [api-log-format]: https://github.com/Mashape/api-log-format
 [galileo]: https://getgalileo.io/
+[har-spec]: http://www.softwareishard.com/blog/har-12-spec/
 [rfc3986-host]: https://tools.ietf.org/html/rfc3986#section-3.2.2
 [rfc3986-path]: https://tools.ietf.org/html/rfc3986#section-3.3
 [rfc3986-port]: https://tools.ietf.org/html/rfc3986#section-3.2.3
