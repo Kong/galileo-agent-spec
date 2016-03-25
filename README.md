@@ -6,31 +6,7 @@ Agents are libraries that can act as a middleweare / helper utility in reading i
 
 Agents need to appropriately be injected at the appropriate point in the request-response lifecycle, at the start of the request before processing any business logic, and at the end of the response before sending back to the client.
 
-```
-   ┌──────────────────────────────────────┐   ┌────────────────────────────┐
-   │                                      │   │                            │
-   │ [server] last request byte received  │──▶│  [agent] log request data  │──┐
-   │                                      │   │                            │  │
-   └──────────────────────────────────────┘   └────────────────────────────┘  │
-┌─────────────────────────────────────────────────────────────────────────────┘
-│  ┌──────────────────────────────────────┐                                         ┌────────────────────────────┐
-│  │                                      │                                         │                            │
-└─▶│     [application] business logic     │──┐                                 ┌───▶│    [agent] add to queue    │──┐
-   │                                      │  │                                 │    │                            │  │
-   └──────────────────────────────────────┘  │                                 │    └────────────────────────────┘  │
-┌────────────────────────────────────────────┘                                 │ ┌──────────────────────────────────┘
-│  ┌──────────────────────────────────────┐   ┌────────────────────────────┐   │ │  ┌────────────────────────────┐
-│  │                                      │   │                            │   │ │  │                            │
-└─▶│  [server] last response byte ready   │──▶│ [agent] log response data  │──┬┘ └─▶│  [agent] send to Galileo   │──┐
-   │                                      │   │                            │  │     │                            │  │
-   └──────────────────────────────────────┘   └────────────────────────────┘  │     └────────────────────────────┘  │
-┌─────────────────────────────────────────────────────────────────────────────┘  ┌──────────────────────────────────┘
-│  ┌──────────────────────────────────────┐                                      │  ┌────────────────────────────┐
-│  │                                      │                                      │  │                            │
-└─▶│        [server] send response        │                                     └─▶│    [agent] flush queue     │
-   │                                      │                                         │                            │
-   └──────────────────────────────────────┘                                         └────────────────────────────┘
-```
+![agent lifecycle](agent-lifecyle.png)
 
 ## Agent Configuration
 
