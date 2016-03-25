@@ -63,8 +63,6 @@ The agent MUST:
 
 The Agent will use [API Log Format](https://github.com/Mashape/api-log-format) *(ALF)* to create log entries.
 
-Most of the fields in ALF are self-explanatory. Check out the [HAR spec][har-spec] for additional information.
-
 The following rules are beyond the scope of HAR and **MUST** be applied to all agents:
 
 ### `clientIPAddress`
@@ -148,7 +146,6 @@ response.content = { encoding: 'base64', text: 'BASE64_BODY' }
 
 [api-log-format]: https://github.com/Mashape/api-log-format
 [galileo]: https://getgalileo.io/
-[har-spec]: http://www.softwareishard.com/blog/har-12-spec/
 [rfc3986-host]: https://tools.ietf.org/html/rfc3986#section-3.2.2
 [rfc3986-path]: https://tools.ietf.org/html/rfc3986#section-3.3
 [rfc3986-port]: https://tools.ietf.org/html/rfc3986#section-3.2.3
