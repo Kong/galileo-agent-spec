@@ -27,7 +27,7 @@ Agents need to appropriately be injected at the appropriate point in the request
 ┌─────────────────────────────────────────────────────────────────────────────┘  ┌──────────────────────────────────┘
 │  ┌──────────────────────────────────────┐                                      │  ┌────────────────────────────┐
 │  │                                      │                                      │  │                            │
-└─▶│        [server] send response        │                                      └─▶│    [agent] flush queue     │
+└─▶│        [server] send response        │                                     └─▶│    [agent] flush queue     │
    │                                      │                                         │                            │
    └──────────────────────────────────────┘                                         └────────────────────────────┘
 ```
@@ -81,7 +81,7 @@ The agent MUST:
 #### Response
 - Successful, 200 would be retured with body (Valid ALFs: Saved ALFs/total ALFs) for request containing all valid ALFs and if request not breaching rate limit
 - Partial success, 207 would be retured with body (Valid ALFs: Saved ALFs/total ALFs) for request containing partial valid ALFs or if request breaching rate limit
-- Failure, 400 would be retured, if request size is more than 500 mb or if you enter a type that doesn’t exist ( `'alf_1.0.0', 'batch_alf_1.0.0'`)
+- Failure, 400 would be retured, if request size is more than 500 mb or if you enter a type that doesn’t exist (e.g. `'alf_1.0.0', 'batch_alf_1.0.0'`)
 
 ## Capturing Data
 
@@ -112,11 +112,11 @@ The following rules are beyond the scope of HAR and **MUST** be applied to all a
 
 ### Request
 
-- [ ] Agent should attempt to get the **RAW** Request as early as possible *(as soon as the last byte is received and before application business logic)*
-  - Should be triggered prior to any processing *(decompression, modification, normalization, etc...)* by the application or application framework
+- [ ] Agents should attempt to get the **RAW** Request as early as possible *(as soon as the last byte is received and before application business logic)*
+  - Should be triggered prior to any processing *(decompression, modification, normalization, etc...)* by the application or application framework.
   - In many languages *(especially: `PHP`, `Node.js`)* reading the input stream is awarded to the **first listener**, the stream is then flushed, thus blocking any following listeners from reading
-  - This is to ensure all original headers and body state are captured properly
-- [ ] Agents cannot obstruct the application natural flow
+  - This is to ensure all original headers and body state are captured properly.
+- [ ] Agents cannot obstruct the application natural flow.
   - should not prevent the application from getting the request data for its own processing
   - this is likely framework dependent, or in the case of `PHP`, `Node.js`, the input stream can only be read once, and thus the agent must re-institute the stream so the application logic can continue un-interrupted.
 
@@ -124,7 +124,7 @@ The following rules are beyond the scope of HAR and **MUST** be applied to all a
 
 - The Agent should only attempt to process the response object at the time the application is ready to send it. *(as soon as the last byte is ready to send)*.
   - Just as with the [request](#request) scenario, this is to ensure all possible headers and final modifications to the response objects are captured.
-  - some languages *(such as `PHP`)* would terminate as soon as as the last byte is sent, it is important to trigger the agent logic, before sending the response is started, but not before constructing the response is completed.
+  - Some languages *(such as `PHP`)* would terminate as soon as as the last byte is sent, it is important to trigger the agent logic, before sending the response is started, but not before constructing the response is completed.
 
 ### Body Size
 
@@ -134,7 +134,7 @@ The following rules are beyond the scope of HAR and **MUST** be applied to all a
 ### Headers
 
 - [ ] When not readily available, the Agent should attempt to calculate headers sizes: *`ALF.har.log.entries[].request.headersSize`, `ALF.har.log.entries[].response.headersSize`*
-  - this can be achieved by reconstructing the [HTTP Message][rfc7230-message] from the start of the HTTP request/response message until (and including) the double `CRLF` before the body.
+  - This can be achieved by reconstructing the [HTTP Message][rfc7230-message] from the start of the HTTP request/response message until (and including) the double `CRLF` before the body.
   - This means calculating the length of the headers as they appeared "on the wire", including the colon, space and `CRLF` between headers.
 
 ### Timings
