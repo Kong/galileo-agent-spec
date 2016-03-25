@@ -12,18 +12,18 @@ Agents need to be injected at the appropriate point in the request-response life
 
 The Agent should expose the following configurations to the user, with fallback to default values when none are provided:
 
-| name                      | type                            | default                         | max    | values                        | description                                               | 
-| ------------------------- | ------------------------------- | ---------- | ------------------------------- | ------ | ----------------------------- | --------------------------------------------------------- | 
-| **`SERVICE_TOKEN`** 		| `String`                        | `-`                             | `-`    | `-`                           | **Required**, [Galileo][galileo] Service Token                          | 
-| **`ENVIRONMENT`**         | `String`                         | `-`                             | `-`    | `-`                           | [Galileo][galileo] Environemnt Slug                       | 
-| **`LOG_BODIES`**          | `String`                         | `all`                           | `-`    | `all`, `request`, `response`  | Capture & send the full bodies of request & response      | 
-| **`RETRY_COUNT`**         | `Integer`                        | `0`                             | `10`   | `0-10`                        | Number of retries in case of failures                     | 
-| **`CONNECTION_TIMEOUT`**  | `Integer`                        | `30`                            | `60`   | `0-60`                        | Timeout in seconds before aborting the current connection | 
-| **`FLUSH_TIMEOUT`**       | `Integer`                        | `5`                             | `60`   | `0-60`                        | Timeout in seconds before flushing the current queue      | 
-| **`QUEUE_SIZE`**          | `Integer`                        | `100`                           | `1000` | `0-1000`                      | Total queue size before flushing                          | 
-| **`HOST`**                | [`RFC 3986 Host`][rfc3986-host]  | `collector.galileo.mashape.com` | `-`    | `-`                           | DNS Host Address of [Galileo Collector](#collector)       | 
-| **`PORT`**                | [`RFC 3986 Port`][rfc3986-port]  | `443`                           | `-`    | `-`                           | Port for Galileo Socket Service                           | 
-| **`FAIL_LOG`**            | [`RFC 3986 Path`][rfc3986-path]  | `/dev/null`                     | `-`    | `-`                           | File system path, storage location for failed requests    | 
+| name                      | type                            | max    | values                        | description                                               | default                          |
+| ------------------------- | ------------------------------- | ------ | ----------------------------- | --------------------------------------------------------- | -------------------------------- |
+| **`SERVICE_TOKEN`**       | `String`                        | `-`    | `-`                           | **Required**, [Galileo][galileo] Service Token            | `-`                              |
+| **`ENVIRONMENT`**         | `String`                        | `-`    | `-`                           | [Galileo][galileo] Environemnt Slug                       | `-`                              |
+| **`LOG_BODIES`**          | `String`                        | `-`    | `all`, `request`, `response`  | Capture & send the full bodies of request & response      | `all`                            |
+| **`RETRY_COUNT`**         | `Integer`                       | `10`   | `0-10`                        | Number of retries in case of failures                     | `0`                              |
+| **`CONNECTION_TIMEOUT`**  | `Integer`                       | `60`   | `0-60`                        | Timeout in seconds before aborting the current connection | `30                              |
+| **`FLUSH_TIMEOUT`**       | `Integer`                       | `60`   | `0-60`                        | Timeout in seconds before flushing the current queue      | `2`                              |
+| **`QUEUE_SIZE`**          | `Integer`                       | `1000` | `0-1000`                      | Total queue size before flushing                          | `1000`                           |
+| **`HOST`**                | [`RFC 3986 Host`][rfc3986-host] | `-`    | `-`                           | DNS Host Address of [Galileo Collector](#collector)       | `collector.galileo.mashape.com`  |
+| **`PORT`**                | [`RFC 3986 Port`][rfc3986-port] | `-`    | `-`                           | Port for Galileo Socket Service                           | `443`                            |
+| **`FAIL_LOG`**            | [`RFC 3986 Path`][rfc3986-path] | `-`    | `-`                           | File system path, storage location for failed requests    | `/dev/null`                      |
 
 ## Collector 
 
