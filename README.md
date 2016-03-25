@@ -6,7 +6,7 @@ Agents are libraries that can act as a middleweare / helper utility in reading i
 
 Agents need to appropriately be injected at the appropriate point in the request-response lifecycle, at the start of the request before processing any business logic, and at the end of the response before sending back to the client.
 
-![agent lifecycle](agent-lifecyle.png)
+![agent lifecycle](agent-lifecycle.png)
 
 ## Agent Configuration
 
