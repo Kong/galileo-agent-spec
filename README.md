@@ -16,7 +16,7 @@ The Agent should expose the following configurations to the user, with fallback 
 | ------------------------- | ------------------------------- | ----------------------------- | --------------------------------------------------------- | -------------------------------- |
 | **`SERVICE_TOKEN`**       | `String`                        | `-`                           | **Required**, [Galileo][galileo] Service Token            | `-`                              |
 | **`ENVIRONMENT`**         | `String`                        | `-`                           | [Galileo][galileo] Environemnt Slug                       | `-`                              |
-| **`LOG_BODIES`**          | `String`                        | `all`, `request`, `response`  | Capture & send the full bodies of request & response      | `all`                            |
+| **`LOG_BODIES`**          | `String`                        | `all`, `none`, `request`, `response`  | Capture & send the full bodies of request & response      | `none`                            |
 | **`RETRY_COUNT`**         | `Integer`                       | `0-10`                        | Number of retries in case of failures                     | `0`                              |
 | **`CONNECTION_TIMEOUT`**  | `Integer`                       | `0-60`                        | Timeout in seconds before aborting the current connection | `30                              |
 | **`FLUSH_TIMEOUT`**       | `Integer`                       | `0-60`                        | Timeout in seconds before flushing the current queue      | `2`                              |
