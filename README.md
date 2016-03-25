@@ -18,7 +18,7 @@ The Agent should expose the following configurations to the user, with fallback 
 | **`ENVIRONMENT`**         | `String`                        | `-`                           | [Galileo][galileo] Environemnt Slug                       | `-`                              |
 | **`LOG_BODIES`**          | `String`                        | `all`, `none`, `request`, `response`  | Capture & send the full bodies of request & response      | `none`                            |
 | **`RETRY_COUNT`**         | `Integer`                       | `0-10`                        | Number of retries in case of failures                     | `0`                              |
-| **`CONNECTION_TIMEOUT`**  | `Integer`                       | `0-60`                        | Timeout in seconds before aborting the current connection | `30                              |
+| **`CONNECTION_TIMEOUT`**  | `Integer`                       | `0-60`                        | Timeout in seconds before aborting the current connection | `30`                              |
 | **`FLUSH_TIMEOUT`**       | `Integer`                       | `0-60`                        | Timeout in seconds before flushing the current queue      | `2`                              |
 | **`QUEUE_SIZE`**          | `Integer`                       | `0-1000`                      | Total queue size before flushing                          | `1000`                           |
 | **`HOST`**                | [`RFC3986`][rfc3986-host]       | `-`                           | DNS Host Address of [Galileo Collector](#collector)       | `collector.galileo.mashape.com`  |
