@@ -1,79 +1,170 @@
-# Galileo Analytics Agent Spec
+# Galileo Agents Spec
 
-Agents are libraries that can act as a middleweare / helper utility in reading incoming requests & outgoing responses data in order to construct [ALF objects][api-log-format] which can be used with the [Galileo][galileo] service.
+Agents are libraries that can act as a middlewear / helper utility in capturing incoming requests & outgoing responses data in order to construct [ALF objects][api-log-format] which can be used with the [Galileo][galileo] service.
 
 ## Lifecycle
 
-Agents need to appropriately be injected at the appropriate point in the request-response lifecycle, at the start of the request before processing any business logic, and at the end of the response before sending back to the client.
+Agents need to be injected at the appropriate point in the request-response lifecycle of the HTTP server, at the start of the request before processing any business logic, and at the end of the response before sending back to the client.
 
 ![](https://raw.githubusercontent.com/Mashape/galileo-agent-spec/master/agent-lifecycle.png)
 
-## Agent Configuration
+## Configuration
 
-### Required settings
+The Agent should expose the following configurations to the user, with fallback to default values when none are provided:
 
-All agents need to request the following information to properly function:
+| name                      | type                            | required   | description                                               | default                         | max    | values                        |
+| ------------------------- | ------------------------------- | ---------- | --------------------------------------------------------- | ------------------------------- | ------ | ----------------------------- |
+| **`SERVICE_TOKEN`** 		| `String`                        | `✔`        | [Galileo][galileo] Service Token                          | `-`                             | `-`    | `-`                           |
+| **`ENVIRONMENT`**         | `String`                        | `✖`️        | [Galileo][galileo] Environemnt Slug                       | `-`                             | `-`    | `-`                           |
+| **`LOG_BODIES`**          | `String`                        | `✖`️        | Capture & send the full bodies of request & response      | `all`                           | `-`    | `all`, `request`, `response`  |
+| **`RETRY_COUNT`**         | `Integer`                       | `✖`️        | Number of retries in case of failures                     | `0`                             | `10`   | `0-10`                        |
+| **`CONNECTION_TIMEOUT`**  | `Integer`                       | `✖`️        | Timeout in seconds before aborting the current connection | `30`                            | `60`   | `0-60`                        |
+| **`FLUSH_TIMEOUT`**       | `Integer`                       | `✖`️        | Timeout in seconds before flushing the current queue      | `5`                             | `60`   | `0-60`                        |
+| **`QUEUE_SIZE`**          | `Integer`                       | `✖`️        | Total queue size before flushing                          | `100`                           | `1000` | `0-1000`                      |
+| **`HOST`**                | [`RFC 3986 Host`][rfc3986-host] | `✖`️        | DNS Host Address of [Galileo Collector](#collector)       | `collector.galileo.mashape.com` | `-`    | `-`                           |
+| **`PORT`**                | [`RFC 3986 Port`][rfc3986-port] | `✖`️        | Port for Galileo Socket Service                           | `443`                           | `-`    | `-`                           |
+| **`FAIL_LOG`**            | [`RFC 3986 Path`][rfc3986-path] | `✖`️        | File system path, storage location for failed requests    | `/dev/null`                     | `-`    | `-`                           |
 
-| name                | type                            | description                                             |
-| ------------------- | ------------------------------- | ------------------------------------------------------- |
-| **`SERVICE_TOKEN`** | `string`                        | Galileo Service Token                                   |
-| **`ENVIRONMENT`**   | `string`                        | The environemnt slug for the target Galileo environment |
+## Collector 
 
-### Optional settings
+The Galileo Collector provides two API endpoints to send data through:
 
-The Agent should expose the following optional configurations to the user, with fallback to default values when none are provided:
+###### `/:version/batch`
 
-| name                | type                            | description                                             | default                      |
-| ------------------- | ------------------------------- | ------------------------------------------------------- | ---------------------------- |
-| **`HOST`**          | [`RFC 3986 Host`][rfc3986-host] | DNS Host / IP Address of Galileo Collector Service         | `collector.galileo.mashape.com` |
-| **`PORT`**          | [`RFC 3986 Port`][rfc3986-port] | Port for Galileo Socket Service                         | `443`                       |
-| **`FAIL_LOG`**      | [`RFC 3986 Path`][rfc3986-path] | file system path, storage location for failed message   | `/dev/null`                  |
-| **`RETRY_COUNT`**   | `integer`                       | Number of retries in case of failures                   | `0`                          |
-| **`LOG_BODY`**      | `boolean`                       | Whether to send the full request body to Galileo        | `false`                      |
-| **`CONNECTION_TIMEOUT`**  | seconds | timeout before aborting the current HTTP connection | `30`    |
-| **`FLUSH_TIMEOUT`**       | seconds | timeout before flushing the current queue           | `5`     |
-| **`QUEUE_SIZE`**          | integer | total queue size                                    | `100`   |
+> Method: `POST`
+> Content-Type: `application/json`
 
-The Galileo Collector Service provides two methods to batch data.
+Group multiple [ALF][api-log-format] Objects into an array
 
-1. Group multiple ALF Objects into an array: `[{ALF_OBJECT}, {ALF_OBJECT}]`. These go to the `/batch` endpoint on the collector
-2. Construct a single ALF Object with multiple entries. These go to the `/single` endpoint on the collector.
+```json
+[
+  {
+    "version": "1.1.0",
+    "serviceToken": "<my service token>",
+    "environment": "PRODUCTION",
+    "har": {
+      "log": {
+        "creator": {
+          "name": "HAR Logger",
+          "version": "1.0.0"
+        },
+        "entries": [{...}]
+      }
+    }
+  },
+  {
+    "version": "1.1.0",
+    "serviceToken": "<my service token>",
+    "environment": "PRODUCTION",
+    "har": {
+      "log": {
+        "creator": {
+          "name": "HAR Logger",
+          "version": "1.0.0"
+        },
+        "entries": [{...}]
+      }
+    }
+  },
+  ...
+]
+```
 
-###### Note:
+###### `/:version/single`
 
-The latter batching method requires sharing the same ALF log entry, meaning all entries share the same ALF [root properties][api-log-format] *(e.g. `version`, `clientIPAddress`)*. This introduces an implicit requirement to group by `clientIPAddress`, and therefore is a complex scenario that is best avoided.
+> Method: `POST`
+> Content-Type: `application/json`
 
-#### Behavior
+Construct a single [ALF][api-log-format] Object with multiple `entries`.
 
-The agent MUST:
+```json
+{
+  "version": "1.1.0",
+  "serviceToken": "<my service token>",
+  "environment": "PRODUCTION",
+  "har": {
+    "log": {
+      "creator": {...},
+      "entries": [
+        {
+          "startedDateTime": "2016-03-13T03:47:16.937Z",
+          "serverIPAddress": "10.10.10.10",
+          "clientIPAddress": "10.10.10.20",
+          "time": 82,
+          "request": {...},
+          "response": {...},
+          "cache": {...},
+          "timings": {...}
+        },
+        {
+          "startedDateTime": "2016-03-13T03:47:16.937Z",
+          "serverIPAddress": "10.10.10.10",
+          "clientIPAddress": "10.10.10.20",
+          "time": 82,
+          "request": {...},
+          "response": {...},
+          "cache": {...},
+          "timings": {...}
+        },
+        ...
+      ]
+    }
+  }
+}
+```
 
-- Group the data into before sending as batches
-- On an Interval of `CONNECTION_TIMEOUT` and without a response from the server, terminate the request.
-- Manage timeouts / failures:
-  - message cannot be flushed within `FLUSH_TIMEOUT`
-  - message rejected from Galileo Socket Server
-  - retry as per `RETRY_COUNT` or send to `FAIL_LOG`.
-- If the ALFs are batched into an array (Option 1), flush the array to `http://socket.galileo.mashape.com/1.0.0/batch` **every 2 seconds AND ALSO every time the array length reaches 1000 elements**. The flush interval (2 seconds) and the queue length (1000) should be configurable by the user.
-- If Option 2 is chosen, it means there's only one ALF to send (even though it might have more than one entry). Send it to `http://socket.galileo.mashape.com/1.0.0/single`.  Make sure it doesn't exceed 500 MB.
-- Monitor the response of the server. If it isn't `200 OK`, then save it to the disk and save the error somewhere (stderr or the error logs, for example).
+##### Response Types
 
-#### Response
-- Successful, 200 would be retured with body (Valid ALFs: Saved ALFs/total ALFs) for request containing all valid ALFs and if request not breaching rate limit
-- Partial success, 207 would be retured with body (Valid ALFs: Saved ALFs/total ALFs) for request containing partial valid ALFs or if request breaching rate limit
-- Failure, 400 would be retured, if request size is more than 500 mb or if you enter a type that doesn’t exist (e.g. `'alf_1.0.0', 'batch_alf_1.0.0'`)
+###### Success: `200 - OK` 
 
-## Capturing Data
+```
+TBD
+```
 
-The Agent will use [API Log Format](https://github.com/Mashape/api-log-format) *(ALF)* to create log entries.
+###### Partial Success: `207 - Multi-Status`
 
-Most of the fields in ALF are self-explanatory. Check out the [HAR spec][har-spec] for additional information.
+```
+TBD
+```
 
-The following rules are beyond the scope of HAR and **MUST** be applied to all agents:
+###### Failure: `400 - Bad Request`
+
+###### Failure: `413 - Request Entity Too Large`
+
+The Collector will only accept requests smaller than `500 MB`.
+
+###### Failure: `500 - Server Error`
+
+An un-expected error occurred, please contact [support@mashape.com](mailto:support@mashape.com) if the error continues.
+
+## Agent Behavior
+
+The agent **MUST** follow the following considerations in its operational logic:
+
+### Handling Failure
+
+- On an Interval of `CONNECTION_TIMEOUT` and without a response from the server, the agent should terminate the request.
+
+- On the cases of failure to send data, *(whether through a rejection from [The Collector](#collector), a `CONNECTION_TIMEOUT` event, or otherwise a network failure)*, the agent should retry up to `RETRY_COUNT`, then eventually write to `FAIL_LOG`.
+
+### Queues
+
+- Collect data and add to a local memory queue before attempting to send to [The Collector](#collector).
+- Flush the queue and send to [The Collector](#collector) at:
+  - every `FLUSH_TIMEOUT` seconds 
+  - every time the queue length reaches `QUEUE_SIZE`
+  - when the queue data size reaches [`500 MB`](#failure-413-request-entity-too-large)
+
+### Capturing Data
+
+The Agent will use [API Log Format][api-log-format] to create log entries. Most of the fields in ALF spec are self-explanatory. Check out the [ALF spec][api-log-format] for additional information.
+
+The following rules are beyond the scope of ALF and **MUST** be applied to all agents:
 
 ### `clientIPAddress`
 
-- Parse Headers to obtain true client IP *(see [reference table](#client-ip-headers) below)*
-- fallback to capturing the raw socket client IP
+- Parse the request headers to obtain the **true** client IP *(see [reference table](#client-ip-headers) below)*.
+- fallback to capturing the raw socket client IP if possible.
 
 ###### Client IP Headers
 
@@ -91,13 +182,16 @@ The following rules are beyond the scope of HAR and **MUST** be applied to all a
 
 ### Request
 
-- Agents should attempt to get the **RAW** Request as early as possible *(as soon as the last byte is received and before application business logic)*
-  - Should be triggered prior to any processing *(decompression, modification, normalization, etc...)* by the application or application framework.
-  - In many languages *(especially: `PHP`, `Node.js`)* reading the input stream is awarded to the **first listener**, the stream is then flushed, thus blocking any following listeners from reading
-  - This is to ensure all original headers and body state are captured properly.
 - Agents cannot obstruct the application natural flow.
   - should not prevent the application from getting the request data for its own processing
   - this is likely framework dependent, or in the case of `PHP`, `Node.js`, the input stream can only be read once, and thus the agent must re-institute the stream so the application logic can continue un-interrupted.
+
+- Agents should attempt to get the **RAW** request as early as possible *(as soon as the last byte is received and before application business logic)*
+  - This is to ensure all original headers and body state are captured properly.
+  - Body capture should be triggered prior to any processing *(decompression, modification, normalization, etc...)* by the application or application framework.
+  - In many languages *(especially: `PHP`, `Node.js`)* reading the input stream is awarded to the **first listener**, the stream is then flushed, thus blocking any following listeners from reading. 
+    - The agent should expect this scenario and provide detailed documentation and instructions for proper installment at the appropriate location for capturing the input stream.
+    - If the agent is successful in capturing the stream in those scenarios, it should also attempt to redirect the stream for any listeners afterwards, or, provide a raw body property for the application framework to use.
 
 ### Response
 
@@ -107,33 +201,33 @@ The following rules are beyond the scope of HAR and **MUST** be applied to all a
 
 ### Body Size
 
-- Agent should attempt to calculate the request & response body size manually *(in bytes)* or Otherwise, rely on the `Content-Length` header when available.
-  - this is true regardless whether bodies are flagged to be sent or not.
+- Agent should attempt to calculate the request & response body size manually *(in bytes)* or otherwise, rely on the `Content-Length` header when available.
+- This is true regardless of the `LOG_BODIES` value.
 
 ### Headers
 
-- When not readily available, the Agent should attempt to calculate headers sizes: *`ALF.har.log.entries[].request.headersSize`, `ALF.har.log.entries[].response.headersSize`*
+- When not readily available, the agent should attempt to calculate headers sizes: *`ALF.har.log.entries[].request.headersSize`, `ALF.har.log.entries[].response.headersSize`*
   - This can be achieved by reconstructing the [HTTP Message][rfc7230-message] from the start of the HTTP request/response message until (and including) the double `CRLF` before the body.
   - This means calculating the length of the headers as they appeared "on the wire", including the colon, space and `CRLF` between headers.
 
 ### Timings
 
-There are 3 mandatory fields that require to be manually calculated (where applicable):
+There are 3 mandatory fields that require to be manually calculated *(where applicable)*:
 
-- `ALF.har.log.entries[].timings.send`: duration in milliseconds, between the first byte of request received and *processing time*
-- `ALF.har.log.entries[].timings.wait`: duration in milliseconds, between the *processing time* and the first byte of response sent time
-- `ALF.har.log.entries[].timings.receive`: duration in milliseconds, between the first byte of the response time and the last byte sent time
+- `ALF.har.log.entries[].timings.send`: duration in milliseconds, between the first byte of request received and *processing time*.
+- `ALF.har.log.entries[].timings.wait`: duration in milliseconds, between the *processing time* and the first byte of response sent time.
+- `ALF.har.log.entries[].timings.receive`: duration in milliseconds, between the first byte of the response time and the last byte sent time.
 
 ###### Note:
 
 The term *"processing time"* can refers to different meanings given the agent type:
 
-1. Proxy Agents: sending the last byte to the upstream service
-2. Native Agents: the start of the application business logic
+- Proxy Agents: sending the last byte to the upstream service
+- Native Agents: the start of the application business logic
 
 ### Bodies
 
-When the request/response bodies are captured, they must be base64-encoded:
+When the request/response bodies are captured, they **must** be [base64 encoded][rfc3548]:
 
 ###### Example
 
@@ -152,6 +246,7 @@ response.content = { encoding: 'base64', text: 'BASE64_BODY' }
 [api-log-format]: https://github.com/Mashape/api-log-format
 [galileo]: https://getgalileo.io/
 [har-spec]: http://www.softwareishard.com/blog/har-12-spec/
+[rfc3548]: https://tools.ietf.org/html/rfc3548
 [rfc3986-host]: https://tools.ietf.org/html/rfc3986#section-3.2.2
 [rfc3986-path]: https://tools.ietf.org/html/rfc3986#section-3.3
 [rfc3986-port]: https://tools.ietf.org/html/rfc3986#section-3.2.3
