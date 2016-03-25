@@ -1,3 +1,5 @@
+# Galileo Analytics Agent Spec
+
 Agents are libraries that can act as a middleweare / helper utility in reading incoming requests & outgoing responses data in order to construct [ALF objects][api-log-format] which can be used with the [Galileo][galileo] service.
 
 ## Lifecycle
