@@ -147,6 +147,10 @@ The agent **MUST** follow the following considerations in its operational logic:
 
 - On the cases of failure to send data, *(whether through a rejection from [The Collector](#collector), a `CONNECTION_TIMEOUT` event, or otherwise a network failure)*, the agent should retry up to `RETRY_COUNT`, then eventually write to `FAIL_LOG`.
 
+#### `FAIL_LOG`
+
+*TBD*
+
 ### Queues
 
 - Collect data and add to a local memory queue before attempting to send to [The Collector](#collector).
