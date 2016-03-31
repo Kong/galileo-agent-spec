@@ -205,8 +205,11 @@ The following rules are beyond the scope of ALF and **MUST** be applied to all a
 
 ### Body Size
 
-- Agent should attempt to calculate the request & response body size manually *(in bytes)* or otherwise, rely on the `Content-Length` header when available.
-- This is true regardless of the `LOG_BODIES` value.
+Agents **MUST** adhere to the following steps regardless of the `LOG_BODIES` option value:
+
+1. Calculate the request & response body size manually *(in bytes)*
+3. Fallback on the `Content-Length` header when manual calculation is not possible.
+3. Use `0` when manual calculation is not possible or *response* comes from cache (e.g. `304`)
 
 ### Headers
 
@@ -231,7 +234,7 @@ The term *"processing time"* can refers to different meanings given the agent ty
 
 ### Bodies
 
-When the request/response bodies are captured, they **must** be [base64 encoded][rfc3548]:
+When the request/response bodies are captured and will be transmitted, they **MUST** be encoded in [base64][rfc3548]:
 
 ###### Example
 
