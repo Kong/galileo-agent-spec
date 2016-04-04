@@ -191,6 +191,7 @@ The following rules are beyond the scope of ALF and **MUST** be applied to all a
   - this is likely framework dependent, or in the case of `PHP`, `Node.js`, the input stream can only be read once, and thus the agent must re-institute the stream so the application logic can continue un-interrupted.
 
 - Agents should attempt to get the **RAW** request as early as possible *(as soon as the last byte is received and before application business logic)*
+  - **RAW** referrs to the request body in its original state, before any post-processing by the application. This includes `gzip` encoded data, binary or any other content type or format that cannot be processed as plain text.
   - This is to ensure all original headers and body state are captured properly.
   - Body capture should be triggered prior to any processing *(decompression, modification, normalization, etc...)* by the application or application framework.
   - In many languages *(especially: `PHP`, `Node.js`)* reading the input stream is awarded to the **first listener**, the stream is then flushed, thus blocking any following listeners from reading. 
