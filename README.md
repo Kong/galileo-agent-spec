@@ -113,6 +113,8 @@ Construct a single [ALF][api-log-format] Object with multiple `entries`.
 }
 ```
 
+The Collector accepts `gzip` and `deflate` compression, as well as plain text. `Content-Encoding` must be set correctly when compression is used.
+
 ##### Response Types
 
 ###### Success: `200 - OK` 
