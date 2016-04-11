@@ -117,14 +117,26 @@ Construct a single [ALF][api-log-format] Object with multiple `entries`.
 
 ###### Success: `200 - OK` 
 
+`errors`: Empty array, there are no errors
+
+`sent`: Integer, number of received ALF entries
+
+`saved`: Integer, number of saved ALF entries. This will be the same as `sent`, since there were no errors
+
 ```
-TBD
+{"errors":[], "sent": 5, "saved": 5}
 ```
 
 ###### Partial Success: `207 - Multi-Status`
 
+`errors`: Array of strings. Each element is a detailed description of an error that occured. If possible, the string will begin with `ALF[i] ` where `i` is the index of the ALF containing the error.
+
+`sent`: Integer, number of received ALF entries
+
+`saved`: Integer, number of saved ALF entries. This will be different from `sent`, since there were errors
+
 ```
-TBD
+{"errors": ["ALF[2] Quota exceeded"], "sent": 3, "saved": 2}
 ```
 
 ###### Failure: `400 - Bad Request`
