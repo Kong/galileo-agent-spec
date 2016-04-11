@@ -30,6 +30,8 @@ The Agent should expose the following configurations to the user, with fallback 
 
 The Galileo Collector accepts `gzip` and `deflate` compression, as well as plain text. `Content-Encoding` must be set correctly when compression is used. Example: `Content-Encoding: gzip`.
 
+The `Content-Type`header should be equal to `application/json`.
+
 The Galileo Collector provides two API endpoints to send data through:
 
 ###### `/:version/batch`
