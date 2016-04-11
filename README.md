@@ -27,6 +27,9 @@ The Agent should expose the following configurations to the user, with fallback 
 
 ## Collector 
 
+
+The Galileo Collector accepts `gzip` and `deflate` compression, as well as plain text. `Content-Encoding` must be set correctly when compression is used. Example: `Content-Encoding: gzip`.
+
 The Galileo Collector provides two API endpoints to send data through:
 
 ###### `/:version/batch`
@@ -113,8 +116,6 @@ Construct a single [ALF][api-log-format] Object with multiple `entries`.
 }
 ```
 
-The Collector accepts `gzip` and `deflate` compression, as well as plain text. `Content-Encoding` must be set correctly when compression is used.
-
 ##### Response Types
 
 ###### Success: `200 - OK` 
@@ -142,6 +143,8 @@ The Collector accepts `gzip` and `deflate` compression, as well as plain text. `
 ```
 
 ###### Failure: `400 - Bad Request`
+
+Something is wrong in your HTTP request itself. Are you using gzip/deflate compression without setting the `Content-Encoding` header? If the issue persists, please contact support.
 
 ###### Failure: `413 - Request Entity Too Large`
 
