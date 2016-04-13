@@ -270,6 +270,10 @@ For response bodies:
 response.content = { encoding: 'base64', text: 'BASE64_BODY' }
 ```
 
+#### Body sizes
+
+Request/Response bodies sent to the collector MUST be under 10MB. Default for should be set to 2MB. If higher than 10MB for an individual body is needed, please contact support@mashape.com, and we can take a look at your use case with you.
+
 [api-log-format]: https://github.com/Mashape/api-log-format
 [galileo]: https://getgalileo.io/
 [har-spec]: http://www.softwareishard.com/blog/har-12-spec/
